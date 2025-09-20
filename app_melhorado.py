@@ -5,6 +5,7 @@ import random
 import string
 import logging
 import os
+from collections import defaultdict
 
 app = Flask(__name__)
 CORS(app)  # Habilita CORS para todas as rotas
@@ -17,6 +18,9 @@ logger = logging.getLogger(__name__)
 API_KEY_TEMPMail = "Bearer tempmail.20250814.mhnfmriw94lkwb5d2o46y46u9kv3bsp5cd09dt2mz0d0g8v6"
 BASE_URL = "https://api.tempmail.lol"
 HEADERS = {"Authorization": API_KEY_TEMPMail}
+
+# ==== CACHE LOCAL DE EMAILS ====
+email_cache = defaultdict(list)  # { token: [email1, email2, ...] }
 
 # ==== Funções auxiliares ====
 def gerar_nome():
@@ -43,26 +47,33 @@ def criar_caixa_email():
         else:
             logger.error(f"Erro ao criar caixa de email: {response.status_code} - {response.text}")
             return None
-            
     except requests.exceptions.RequestException as e:
         logger.error(f"Erro de conexão ao criar caixa de email: {str(e)}")
         return None
 
 def buscar_emails(token):
-    """Busca emails na caixa de entrada"""
+    """Busca emails na caixa de entrada e mantém os anteriores"""
     try:
         url = f"{BASE_URL}/v2/inbox"
         params = {"token": token}
         response = requests.get(url, headers=HEADERS, params=params, timeout=10)
-        
+
         if response.ok:
             data = response.json()
-            logger.info(f"Emails buscados com sucesso. Total: {len(data.get('emails', []))}")
-            return data
+            novos_emails = data.get("emails", [])
+
+            # Evita duplicação com base no ID do e-mail
+            ids_existentes = {email["id"] for email in email_cache[token]}
+            emails_unicos = [email for email in novos_emails if email["id"] not in ids_existentes]
+
+            if emails_unicos:
+                logger.info(f"{len(emails_unicos)} novos e-mails encontrados para token {token[:10]}...")
+                email_cache[token].extend(emails_unicos)
+
+            return {"emails": email_cache[token]}
         else:
             logger.error(f"Erro ao buscar emails: {response.status_code} - {response.text}")
             return {"error": f"Erro ao buscar emails (Status: {response.status_code})"}
-            
     except requests.exceptions.RequestException as e:
         logger.error(f"Erro de conexão ao buscar emails: {str(e)}")
         return {"error": "Erro de conexão com o servidor de email"}
@@ -78,7 +89,6 @@ def gerar_conta():
     """Gera uma nova conta com email temporário"""
     try:
         logger.info("Iniciando geração de nova conta")
-        
         usuario = gerar_nome()
         senha = gerar_senha()
         inbox = criar_caixa_email()
@@ -97,7 +107,6 @@ def gerar_conta():
             return jsonify({
                 "error": "Não foi possível criar o email temporário. Tente novamente em alguns instantes."
             }), 500
-            
     except Exception as e:
         logger.error(f"Erro inesperado ao gerar conta: {str(e)}")
         return jsonify({
@@ -113,19 +122,17 @@ def verificar_emails(token):
             
         logger.info(f"Verificando emails para token: {token[:10]}...")
         data = buscar_emails(token)
-        
-        # Adicionar informações extras para melhor debugging
+
+        # Garantir que todos os campos necessários existam
         if "emails" in data:
             for email in data["emails"]:
-                # Garantir que todos os campos necessários existam
                 email.setdefault("from", "Remetente desconhecido")
                 email.setdefault("subject", "Sem assunto")
                 email.setdefault("body", "")
                 email.setdefault("html", "")
                 email.setdefault("date", "")
-        
+
         return jsonify(data)
-        
     except Exception as e:
         logger.error(f"Erro inesperado ao verificar emails: {str(e)}")
         return jsonify({
@@ -155,4 +162,3 @@ def internal_error(error):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
-
