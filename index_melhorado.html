@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Conta + Email Temporário</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      color: white;
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: 300;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .subtitle {
+      color: rgba(255,255,255,0.9);
+      font-size: 1.1rem;
+      margin-top: 10px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .control-panel {
+      background: #f8f9fa;
+      padding: 25px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      margin: 5px;
+      font-weight: 500;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+      box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 14px;
+      margin: 2px;
+    }
+
+    .info-card {
+      background: white;
+      padding: 25px;
+      margin: 20px 0;
+      border-radius: 10px;
+      border-left: 4px solid #667eea;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .info-item {
+      margin: 15px 0;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .info-value {
+      font-family: 'Courier New', monospace;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #dee2e6;
+      word-break: break-all;
+      margin-bottom: 10px;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .status {
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-weight: 500;
+    }
+
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .status-warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .emails-container {
+      padding: 25px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .email-item {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 15px 0;
+      transition: all 0.3s ease;
+    }
+
+    .email-item:hover {
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+
+    .email-header {
+      border-bottom: 1px solid #dee2e6;
+      padding-bottom: 15px;
+      margin-bottom: 15px;
+    }
+
+    .email-from {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 5px;
+    }
+
+    .email-subject {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #212529;
+      margin-bottom: 5px;
+    }
+
+    .email-date {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+
+    .email-body {
+      line-height: 1.6;
+      color: #495057;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+
+    .email-body a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+      padding: 2px 4px;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+    }
+
+    .email-body a:hover {
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .container {
+        border-radius: 10px;
+      }
+
+      .control-panel, .emails-container {
+        padding: 20px;
+      }
+
+      .btn-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        margin: 5px 0;
+      }
+
+      .info-value {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>📧 Gerador de Conta + Email Temporário</h1>
+    <div class="subtitle">Sistema profissional para criação de contas temporárias</div>
+  </div>
+
+  <div class="container">
+    <div class="control-panel">
+      <button class="btn" onclick="gerarConta()">
+        🎲 Gerar Nova Conta
+      </button>
+      
+      <div id="status"></div>
+      <div id="info"></div>
+    </div>
+
+    <div class="emails-container">
+      <div id="emails"></div>
+    </div>
+  </div>
+
+  <script>
+    let token = null;
+    let intervaloEmails = null;
+    let emailsRecebidos = new Set();
+
+    function mostrarStatus(mensagem, tipo = 'info') {
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerHTML = `<div class="status status-${tipo}">${mensagem}</div>`;
+    }
+
+    function copiarTexto(texto) {
+      navigator.clipboard.writeText(texto).then(() => {
+        mostrarStatus('✅ Texto copiado para a área de transferência!', 'success');
+        setTimeout(() => {
+          document.getElementById('status').innerHTML = '';
+        }, 2000);
+      }).catch(() => {
+        mostrarStatus('❌ Erro ao copiar texto', 'error');
+      });
+    }
+
+    function gerarSenhaAleatoria() {
+      const simbolos = '!@#$%^&*+=_-';
+      const caracteres = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' + simbolos;
+      let senha = '';
+      for (let i = 0; i < 12; i++) {
+        senha += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+      }
+      return senha;
+    }
+
+    async function gerarConta() {
+      mostrarStatus('🔄 Gerando nova conta...', 'info');
+      
+      try {
+        const res = await fetch('/gerar_conta');
+        const data = await res.json();
+
+        if (data.error) {
+          mostrarStatus(`❌ ${data.error}`, 'error');
+          return;
+        }
+
+        token = data.token;
+        emailsRecebidos.clear();
+
+        const senhaGerada = gerarSenhaAleatoria();
+
+        document.getElementById('info').innerHTML = `
+          <div class="info-card">
+            <div class="info-item">
+              <span class="info-label">👤 Usuário:</span>
+              <div class="info-value" id="usuario-value">${data.usuario}</div>
+              <div class="btn-group">
+                <button class="btn btn-secondary btn-small" onclick="copiarTexto('${data.usuario}')">
+                  📋 Copiar Usuário
+                </button>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <span class="info-label">🔐 Senha:</span>
+              <div class="info-value" id="senha-value">${senhaGerada}</div>
+              <div class="btn-group">
+                <button class="btn btn-secondary btn-small" onclick="copiarTexto(document.getElementById('senha-value').textContent)">
+                  📋 Copiar Senha
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="alterarSenha()">
+                  🔄 Nova Senha
+                </button>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <span class="info-label">📭 Email Temporário:</span>
+              <div class="info-value" id="email-value">${data.email}</div>
+              <div class="btn-group">
+                <button class="btn btn-secondary btn-small" onclick="copiarTexto('${data.email}')">
+                  📋 Copiar Email
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('emails').innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <div>Aguardando emails... Verificação automática a cada 10 segundos</div>
+          </div>
+        `;
+
+        mostrarStatus('✅ Conta gerada com sucesso! Aguardando emails...', 'success');
+
+        verificarEmails();
+        if (intervaloEmails) clearInterval(intervaloEmails);
+        intervaloEmails = setInterval(verificarEmails, 10000);
+
+      } catch (error) {
+        mostrarStatus('❌ Erro de conexão. Tente novamente.', 'error');
+        console.error('Erro:', error);
+      }
+    }
+
+    function alterarSenha() {
+      const novaSenha = gerarSenhaAleatoria();
+      document.getElementById('senha-value').textContent = novaSenha;
+      mostrarStatus('🔄 Nova senha gerada!', 'info');
+    }
+
+    function formatarData(dateString) {
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleString('pt-BR');
+      } catch {
+        return dateString;
+      }
+    }
+
+    function processarConteudoEmail(email) {
+      let conteudo = email.body || email.html || "[Email sem conteúdo visível]";
+      
+      if (email.html && (!email.body || email.body === "[email has empty or invalid body]")) {
+        // Se só temos HTML, vamos processar ele para tornar os links clicáveis
+        conteudo = email.html;
+      }
+      
+      // Sanitizar e processar o HTML para tornar links clicáveis
+      if (conteudo.includes('<') && conteudo.includes('>')) {
+        // É HTML, vamos processar
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = conteudo;
+        
+        // Garantir que todos os links abram em nova aba
+        const links = tempDiv.querySelectorAll('a');
+        links.forEach(link => {
+          link.setAttribute('target', '_blank');
+          link.setAttribute('rel', 'noopener noreferrer');
+        });
+        
+        return tempDiv.innerHTML;
+      } else {
+        // É texto simples, vamos converter URLs em links
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return conteudo.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+      }
+    }
+
+    async function verificarEmails() {
+      if (!token) return;
+
+      try {
+        const res = await fetch(`/verificar_emails/${token}`);
+        const data = await res.json();
+
+        if (data.expired) {
+          document.getElementById('emails').innerHTML = `
+            <div class="status status-warning">
+              ⚠️ Caixa de entrada expirada. Gere uma nova conta para continuar.
+            </div>
+          `;
+          clearInterval(intervaloEmails);
+          return;
+        }
+
+        if (data.error) {
+          document.getElementById('emails').innerHTML = `
+            <div class="status status-error">
+              ❌ ${data.error}
+            </div>
+          `;
+          return;
+        }
+
+        if (!data.emails || data.emails.length === 0) {
+          document.getElementById('emails').innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📭</div>
+              <div>Nenhum email recebido ainda...</div>
+              <div style="font-size: 0.9rem; margin-top: 10px; color: #6c757d;">
+                A verificação é feita automaticamente a cada 10 segundos
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        let emailsHtml = '';
+        let novosEmails = 0;
+
+        data.emails.forEach(email => {
+          if (!emailsRecebidos.has(email.date)) {
+            emailsRecebidos.add(email.date);
+            novosEmails++;
+            
+            const conteudoProcessado = processarConteudoEmail(email);
+            
+            emailsHtml = `
+              <div class="email-item">
+                <div class="email-header">
+                  <div class="email-from">📧 De: ${email.from}</div>
+                  <div class="email-subject">📋 Assunto: ${email.subject}</div>
+                  <div class="email-date">🕒 Recebido em: ${formatarData(email.date)}</div>
+                </div>
+                <div class="email-body">
+                  ${conteudoProcessado}
+                </div>
+              </div>
+            ` + emailsHtml;
+          }
+        });
+
+        if (emailsHtml) {
+          document.getElementById('emails').innerHTML = emailsHtml;
+          
+          if (novosEmails > 0) {
+            mostrarStatus(`📬 ${novosEmails} novo(s) email(s) recebido(s)!`, 'success');
+          }
+        }
+
+      } catch (error) {
+        console.error('Erro ao verificar emails:', error);
+        document.getElementById('emails').innerHTML = `
+          <div class="status status-error">
+            ❌ Erro ao verificar emails. Tentando novamente...
+          </div>
+        `;
+      }
+    }
+
+    // Limpar intervalo quando a página for fechada
+    window.addEventListener('beforeunload', () => {
+      if (intervaloEmails) {
+        clearInterval(intervaloEmails);
+      }
+    });
+  </script>
+
+</body>
+</html>
+
