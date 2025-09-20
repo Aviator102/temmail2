@@ -1,13 +1,27 @@
 {
   "version": 2,
   "builds": [
-    { "src": "app.py", "use": "@vercel/python" },
-    { "src": "index.html", "use": "@vercel/static" }
+    {
+      "src": "app_melhorado.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "index_melhorado.html",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
-    { "src": "/gerar_conta", "dest": "app.py" },
-    { "src": "/verificar_emails/(.*)", "dest": "app.py" },
-    { "src": "/", "dest": "/index.html" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "/gerar_conta",
+      "dest": "app_melhorado.py"
+    },
+    {
+      "src": "/verificar_emails/(.*)",
+      "dest": "app_melhorado.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index_melhorado.html"
+    }
   ]
 }
